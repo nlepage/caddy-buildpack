@@ -1,0 +1,22 @@
+{
+	# disable https
+	auto_https off
+
+	# disable admin endpoint
+	admin off
+
+	log {
+		level DEBUG
+	}
+
+	servers :{$PORT} {
+		# disable http3
+		protocols h1 h2
+	}
+}
+
+:{$PORT} {
+	root * {$HOME}
+
+	import /app/Caddyfile
+}

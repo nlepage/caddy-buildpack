@@ -1,0 +1,35 @@
+#!/bin/bash
+
+set -e
+set -o pipefail
+
+if [ -n "$BUILDPACK_DEBUG" ]; then
+  set -x
+fi
+
+BUILD_DIR=${1:-}
+CACHE_DIR=${2:-}
+ENV_DIR=${3:-}
+
+basedir="$( cd -P "$( dirname "$0" )" && pwd )"
+nginx_version="2.6.2"
+package_url="https://github.com/caddyserver/caddy/releases/download/v${nginx_version}/caddy_${nginx_version}_linux_amd64.tar.gz"
+caddy_vendor_dir="${BUILD_DIR}/vendor/caddy"
+
+### Download caddy ###
+
+mkdir -p "$caddy_vendor_dir"
+
+curl --fail --retry 3 --retry-delay 2 --connect-timeout 3 --max-time 30 "$package_url" -L -s | tar xz -C "$caddy_vendor_dir"
+
+### Add to PATH ###
+
+mkdir -p "$BUILD_DIR/.profile.d"
+
+cat > "$BUILD_DIR/.profile.d/caddy.sh" <<SH
+export PATH=${caddy_vendor_dir}:\$PATH
+SH
+
+### Copy config
+
+cp "${basedir}/../conf/CaddyfileServer" "$caddy_vendor_dir"
